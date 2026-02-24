@@ -29,6 +29,7 @@
   "dependencies": {
     "@designedresults/h5-script-plus": "^2.0.108",
     "dayjs": "^1.11.13",
+    "fraction.js": "^5.3.4",
     "numeral": "^2.0.6"
   },
   "prettier": {

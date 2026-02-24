@@ -496,6 +496,10 @@ interface IActiveGrid {
 	onSelectedRowsChanged: any;
 	setSelectedRows(rows: any[]): void;
 	getSelectedGridRows(): any[]
+	
+	updateRowDataSet(value: any, id: any, row: any)
+	getRowElement(row: number)
+
 }
 
 /**

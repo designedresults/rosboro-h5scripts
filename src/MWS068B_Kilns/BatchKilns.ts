@@ -35,7 +35,7 @@ class BatchKilns {
       } else if (kiln.type === 'BATCH_WIP') {
           this.addHours(-12, 12)
           this.addUpdateBatch(whsl)
-          this.addStopBatch(whsl)
+          this.addFinishBatch(whsl)
         }
       
     }
@@ -78,19 +78,19 @@ class BatchKilns {
     })
   }
 
-  private addStopBatch(whsl: any) {
+  private addFinishBatch(whsl: any) {
     const btn = new ButtonElement()
     btn.Position = new PositionElement()
     btn.Position.Top = this.top
     btn.Position.Left = this.left + 30
     btn.Name = 'start'
-    btn.Value = 'STOP BATCH'
+    btn.Value = 'FINISH BATCH'
     const el = this.controller.GetContentElement().AddElement(btn)
     $(el).on('click', async () => {
       try {
         // await this.startBatch(this.warehouse, this.location)
         const msg = `
-        <p>Batch for ${whsl.name} will be stopped with a planned release on ${dayjs()
+        <p>Batch for ${whsl.name} will be finished with a planned release on ${dayjs()
           .add(16, 'hours')
           .format('ddd, M/D h:mma')}</p>
         <p>Are you sure you want to stop this batch?</p>

@@ -6,6 +6,7 @@ import {
   formatErrorMessage,
   getFieldValue,
   IMIBulkResponse,
+  Label,
   TextInput,
 } from '@designedresults/h5-script-plus'
 import Dialog from '../Dialog'
@@ -35,15 +36,16 @@ class QuickMove {
   private async run() {
     this.addUI()
 
-    this.idsDataGrid?.removeAllListeners('selectionchanged')
-    this.idsDataGrid?.addEventListener('selectionchanged', () => {
+    const handleSelectionChanged = () => {
       this.selectedRows = this.controller.GetGrid().getSelectedGridRows()
       if (this.selectedRows.length === 0) {
         this.button.disable()
       } else {
         this.button.enable()
       }
-    })
+    }
+    this.idsDataGrid?.offEvent('selectionchanged', handleSelectionChanged)
+    this.idsDataGrid?.addEventListener('selectionchanged', handleSelectionChanged)
   }
 
   protected addUI() {
@@ -53,7 +55,8 @@ class QuickMove {
       .position(this.top, this.left)
       .width(10)
       .build()
-    
+
+    $(this.location.el).attr('placeholder', 'Location')
 
     this.button = new ActionButton(this.controller)
       .name('btn-QuickMove')
@@ -77,7 +80,6 @@ class QuickMove {
     const html = this.formatResponse(resp)
     await new Dialog().title('Quick Move').message(html).type('Success').show()
     this.controller.PressKey('F5')
-
   }
 
   protected getBalIds() {
@@ -92,7 +94,7 @@ class QuickMove {
       if (!(WHLO && ITNO && WHSL && BANO && STQT)) {
         throw new Error('Missing required field to peform Quick Move')
       }
-      balIds.push({ WHLO, ITNO, WHSL, BANO, TRQT: numeral(STQT).value()})
+      balIds.push({ WHLO, ITNO, WHSL, BANO, TRQT: numeral(STQT).value() })
     }
     return balIds
   }
@@ -102,8 +104,8 @@ class QuickMove {
     const reqs: IMIRequest[] = balIds.map(balId => ({
       program: 'MMS175MI',
       transaction: 'Update',
-      record: {TWSL: toLocation.toUpperCase(), DSP1: '1', ...balId},
-      includeMetadata: true
+      record: { TWSL: toLocation.toUpperCase(), DSP1: '1', ...balId },
+      includeMetadata: true,
     }))
     return await this.bulkM3API.executeRequest(reqs)
   }
@@ -125,7 +127,7 @@ class QuickMove {
     <tbody>
     `
     for (const result of resp.results) {
-      const {WHLO, ITNO, WHSL, BANO} = result.parameters
+      const { WHLO, ITNO, WHSL, BANO } = result.parameters
       html += `
       <tr>
         <td>${WHLO}</td>

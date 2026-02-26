@@ -1,6 +1,7 @@
 import {
   ActionButton,
   BulkM3API,
+  ComboBox,
   CSRF,
   formatErrorMessage,
   getFieldValue,
@@ -51,6 +52,7 @@ class ReturnFromInfeed {
 
   private quantity: NumberInput
   private newLotNumber: TextInput
+  private toLocation: TextInput
   private button: ActionButton
 
   private idsDataGrid: any
@@ -126,37 +128,60 @@ class ReturnFromInfeed {
   }
 
   protected addUI() {
-
+    let left = this.left
     new Label(this.controller)
       .name('lbl-Quantity')
       .value('Qty')
-      .position(this.top, this.left)
+      .position(this.top, left)
       .build()
+    left += 2
 
     this.quantity = new NumberInput(this.controller)
       .name('txt-Quantity')
       .value('')
-      .position(this.top, this.left + 4)
+      .position(this.top, left)
       .width(6)
       .build()
+    left += 6
 
     new Label(this.controller)
       .name('lbl-NewLotNumber')
       .value('New lot')
-      .position(this.top, this.left + 12)
+      .position(this.top, left)
       .build()
+    left += 4
 
     this.newLotNumber = new TextInput(this.controller)
       .name('txt-NewLotNumber')
       .value('')
-      .position(this.top, this.left + 17)
+      .position(this.top, left)
       .build()
+    left += 13
 
+    new Label(this.controller)
+      .name('lbl-ToLocation')
+      .value('To loc')
+      .position(this.top, left)
+      .build()
+    left += 3
+
+    let defaultToLocation = '';
+    if (SessionCache.ContainsKey('ReturnFromInfeed:toLocation')) {
+      defaultToLocation = SessionCache.Get('ReturnFromInfeed:toLocation')
+    }
+
+    this.toLocation = new TextInput(this.controller)
+      .name('txt-ToLocation')
+      .value(defaultToLocation)
+      .position(this.top, left)
+      .width(10)
+      .build()
+    left += 12
 
     this.button = new ActionButton(this.controller)
       .name('btn-ReturnFromInfeed')
       .value(this.label)
-      .position(this.top, this.left + 30)
+      .position(this.top, left)
       .action(async () => {
         try {
           await this.returnFromInfeed()
@@ -175,24 +200,39 @@ class ReturnFromInfeed {
     if (balIds.length !== 1) {
       throw "Select one item to return from infeed"
     }
+    const balId = balIds[0];
+    const itemNumber = balId.ITNO;
+    const warehouse = balId.WHLO;
+    const lotNumber = balId.BANO;
 
+    
     const quantity = this.quantity.getNumber()
-    const toLocation = "FL VGN LAM";
+    const toLocation = this.toLocation.getString();
+    SessionCache.Add("ReturnFromInfeed:toLocation", toLocation)
+    
     const newLotNumber = this.newLotNumber.getString()
+    if (lotNumber === newLotNumber) {
+      throw 'New lot number must be different from the current lot number.'
+    }
+
     this.validateQuantity(quantity, balIds[0])
-    await this.validateNewLotnumber(balIds[0].ITNO, newLotNumber)
+    await this.validateNewLotnumber(itemNumber, newLotNumber)
+    await this.validateToLocation(balIds[0].WHLO, toLocation)
 
     if (await this.confirm(balIds, quantity, toLocation, newLotNumber)) {
-      const respMove = await this.addMove(balIds, quantity, toLocation)
-      const respReclass = await this.addReclass(balIds, toLocation, newLotNumber)
+      let resp = await this.addMove(balIds, quantity, toLocation)
+      if (resp.nrOfFailedTransactions === 0) {
+        // only perform reclass if move was successful
+        const respReclass = await this.addReclass(balIds, toLocation, newLotNumber)
+        resp.nrOfFailedTransactions = respReclass.nrOfFailedTransactions
+        resp.nrOfSuccessfullTransactions += respReclass.nrOfSuccessfullTransactions
+        resp.results = [...resp.results, ...respReclass.results]
 
-      const resp = { ...respMove }
-      resp.nrOfFailedTransactions += respReclass.nrOfFailedTransactions
-      resp.nrOfSuccessfullTransactions += respReclass.nrOfSuccessfullTransactions
-      resp.results = [...respMove.results, ...respReclass.results]
+      }
 
       const html = this.formatResponse(resp)
       await new Dialog().title(this.label).message(html).type('Success').show()
+
       this.controller.PressKey('F5')
     }
 
@@ -200,6 +240,7 @@ class ReturnFromInfeed {
 
   protected async confirm(balIds: any[], quantity: number, toLocation: string, newLotNumber: string) {
     let message = `<p>${this.confirmMessage}</p>`
+    message += `<p>Item will be moved to ${toLocation} and reclassfied to ${newLotNumber}.</p>`
     message += `
     <table style="border-collapse:collapse; border-spacing:0; margin-top:10px;">
       <thead>
@@ -304,47 +345,79 @@ class ReturnFromInfeed {
     }
   }
 
+  protected async validateToLocation(warehouse: string, toLocation: string) {
+    if (!toLocation) {
+      throw `To location is required.`
+    }
+
+    try {
+      const req: IMIRequest = {
+        program: 'MMS010MI',
+        transaction: 'GetLocation',
+        record: {
+          WHLO: warehouse,
+          WHSL: toLocation
+        }
+      }
+      await M3API.executeRequest(req)
+    } catch (err) {
+      if (err.errorCode === 'WWS0103') {
+        throw `Location ${toLocation} does not exist in warehouse ${warehouse}.`
+      } else {
+        throw err
+      }
+    }
+  }
+
   protected async addMove(balIds: any[], quantity: number, toLocation: string) {
-    const reqs: IMIRequest[] = balIds.map(balId => ({
-      program: 'MMS850MI',
-      transaction: 'AddMove',
-      record: {
-        PRFL: '*EXE',
-        E0PA: 'WS',
-        E065: 'WMS',
-        WHLO: balId.WHLO,
-        WHSL: balId.WHSL,
-        ITNO: balId.ITNO,
-        BANO: balId.BANO,
-        QLQT: quantity,
-        TWSL: toLocation
-      },
-      includeMetadata: true,
-    }))
-    return await this.bulkM3API.executeRequest(reqs)
+    try {
+      const reqs: IMIRequest[] = balIds.map(balId => ({
+        program: 'MMS850MI',
+        transaction: 'AddMove',
+        record: {
+          PRFL: '*EXE',
+          E0PA: 'WS',
+          E065: 'WMS',
+          WHLO: balId.WHLO,
+          WHSL: balId.WHSL,
+          ITNO: balId.ITNO,
+          BANO: balId.BANO,
+          QLQT: quantity,
+          TWSL: toLocation
+        },
+        includeMetadata: true,
+      }))
+      return await this.bulkM3API.executeRequest(reqs)
+    } catch (err) {
+      return err
+    }
   }
 
 
   protected async addReclass(balIds: any[], toLocation: string, newLotNumber: string) {
-    const reqs: IMIRequest[] = balIds.map(balId => ({
-      program: 'MMS850MI',
-      transaction: 'AddReclass',
-      record: {
-        PRFL: '*EXE',
-        E0PA: 'WS',
-        E065: 'WMS',
-        WHLO: balId.WHLO,
-        WHSL: toLocation,
-        ITNO: balId.ITNO,
-        BANO: balId.BANO,
-        NITN: balId.ITNO,
-        NBAN: newLotNumber,
-        ALOC: '1',
-        STAS: '2'
-      },
-      includeMetadata: true,
-    }))
-    return await this.bulkM3API.executeRequest(reqs)
+    try {
+      const reqs: IMIRequest[] = balIds.map(balId => ({
+        program: 'MMS850MI',
+        transaction: 'AddReclass',
+        record: {
+          PRFL: '*EXE',
+          E0PA: 'WS',
+          E065: 'WMS',
+          WHLO: balId.WHLO,
+          WHSL: toLocation,
+          ITNO: balId.ITNO,
+          BANO: balId.BANO,
+          NITN: balId.ITNO,
+          NBAN: newLotNumber,
+          ALOC: '1',
+          STAS: '2'
+        },
+        includeMetadata: true,
+      }))
+      return await this.bulkM3API.executeRequest(reqs)
+    } catch (err) {
+      return err
+    }
   }
 
 

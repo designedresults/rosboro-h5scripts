@@ -119,10 +119,10 @@ class PMS050E_CatchWeight {
     const to = altUOM[toUOM].factor
     let converted = 0
     if (fromUOM === basicUOM) {
-      converted = quantity * to
+      converted = quantity / to
     } else {
-      const qtyBasicUOM = quantity / from
-      converted = qtyBasicUOM * to
+      const qtyBasicUOM = quantity * from
+      converted = qtyBasicUOM / to
     }
     if (converted !== undefined) {
       const roundingFactor = Math.pow(10, altUOM[toUOM].decimals ?? 0)

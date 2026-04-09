@@ -65,13 +65,13 @@ class ReprintTag {
     this.user = ScriptUtil.GetUserContext().USID
     this.division = ScriptUtil.GetUserContext().CurrentDivision
     const arr = scriptArgs.args.split(',');
-    this.top = Number(this.getArg(arr, 'TOP')) ?? 9
-    this.left = Number(this.getArg(arr, 'LEFT')) ?? 10
+    this.top = Number(this.getArg(arr, 'TOP')) || 9
+    this.left = Number(this.getArg(arr, 'LEFT')) || 10
     this.view = this.getArg(arr, 'VIEW')
     this.sort = this.getArg(arr, 'SORT')
-    this.label = this.getArg(arr, 'LBL') ?? 'Reprint Tag'
-    this.confirmMessage = this.getArg(arr, 'CFM') ?? 'Are you sure you want to reprint tags?'
-    this.maxRows = Number(this.getArg(arr, 'MAX')) ?? 1
+    this.label = this.getArg(arr, 'LBL') || 'Reprint Tag'
+    this.confirmMessage = this.getArg(arr, 'CFM') || 'Are you sure you want to reprint tags?'
+    this.maxRows = Number(this.getArg(arr, 'MAX')) || 1
     this.reasonCode = this.getArg(arr, 'RSCD')
 
   }

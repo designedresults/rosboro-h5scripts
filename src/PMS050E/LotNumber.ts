@@ -7,6 +7,7 @@ class PMS050E_LotNumber {
   private facility: string
   private product: string
   private orderNumber: string
+  private override: boolean = false
 
   constructor(scriptArgs: IScriptArgs) {
     this.controller = scriptArgs.controller
@@ -24,9 +25,12 @@ class PMS050E_LotNumber {
   }
 
   private async run() {
+
+    this.watchQuantities()
+
     const { lotNumberingMethod } = await this.getItem()
 
-    if (lotNumberingMethod === '0' || true) {
+    if (lotNumberingMethod === '0') {
       // 0-Manual
       this.controller.Requesting.Clear()
       this.controller.RequestCompleted.Clear()
@@ -47,10 +51,13 @@ class PMS050E_LotNumber {
         detachRequestCompleted()
       })
 
+      
       // 0-manual
-      this.disableLotNumber()
-      const savedLotNumber: string = InstanceCache.Get(this.controller, 'WHBANO') ?? ''
-      this.setLotNumber(savedLotNumber)
+      if (this.getReceivedQuantity() > 0 && this.getManufacturedQuantity() > 0) {
+        this.disableLotNumber()
+        const savedLotNumber: string = InstanceCache.Get(this.controller, 'WHBANO') ?? ''
+        this.setLotNumber(savedLotNumber)
+      }
       this.attachRequesting()
     }
   }
@@ -69,7 +76,7 @@ class PMS050E_LotNumber {
     this.log.Debug(`Requesting event command value = ${args.commandValue}`)
     if (args.commandValue === 'ENTER') {
       // update lot number and re-enter
-      if (this.getManufacturedQuantity() || this.getReceivedQuantity()) {
+      if (this.getManufacturedQuantity() > 0 || this.getReceivedQuantity() > 0) {
         const lotNumber: string = InstanceCache.Get(this.controller, 'WHBANO') ?? ''
         if (lotNumber) {
           this.setLotNumber(lotNumber)
@@ -78,9 +85,32 @@ class PMS050E_LotNumber {
           this.retrieveNextLotNumber()
           args.cancel = true
         }
+      } else if (this.getManufacturedQuantity() < 0 || this.getReceivedQuantity() < 0) {
+        // save lot number to reverse
+        const lotNumber = this.getLotNumber()
+        InstanceCache.Add(this.controller, 'WHBANO', lotNumber)
       }
     }
     this.attachRequesting()
+  }
+
+  private watchQuantities() {
+    const receivedQty = $(this.controller.ParentWindow).find('#WHREQA')[0] as HTMLInputElement
+    $(receivedQty).on('change', () => {
+      if (this.getReceivedQuantity() < 0) {
+        this.enableLotNumber()
+      } else {
+        this.disableLotNumber()
+      }
+    })
+    const manufacturedQty = $(this.controller.ParentWindow).find('#WHMAQA')[0] as HTMLInputElement
+    $(manufacturedQty).on('change', () => {
+      if (this.getManufacturedQuantity() < 0) {
+        this.enableLotNumber()
+      } else {
+        this.disableLotNumber()
+      }
+    })
   }
 
   private getFacility() {
@@ -103,7 +133,7 @@ class PMS050E_LotNumber {
 
   private getReceivedQuantity() {
     const value = this.controller.GetValue('WHREQA')
-    this.log.Debug(`Received quantity (WHReQA) = ${value}`)
+    this.log.Debug(`Received quantity (WHREQA) = ${value}`)
     return numeral(value).value() ?? 0
   }
 
@@ -116,7 +146,19 @@ class PMS050E_LotNumber {
   private disableLotNumber() {
     const lotNumberEl = $(this.controller.ParentWindow).find('#WHBANO')[0]
     $(lotNumberEl).attr('readonly', 'readonly')
-    $(lotNumberEl).siblings('span.h5-lookup-trigger').remove()
+    $(lotNumberEl).siblings('span.h5-lookup-trigger').hide()
+  }
+
+  private enableLotNumber() {
+    const lotNumberEl = $(this.controller.ParentWindow).find('#WHBANO')[0]
+    $(lotNumberEl).removeAttr('readonly')
+    $(lotNumberEl).siblings('span.h5-lookup-trigger').show()
+  }
+
+  private getLotNumber() {
+    const value = this.controller.GetValue('WHBANO')
+    this.log.Debug(`Lot number (WHBANO) = ${value}`)
+    return value
   }
 
   private setLotNumber(lotNumber: string) {

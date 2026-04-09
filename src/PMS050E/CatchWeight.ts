@@ -33,11 +33,16 @@ class PMS050E_CatchWeight {
       ?.find('#WHMAQA')
       ?.on('input', (e: any) => {
         const manufacturedQty = Number(e.target.value)
-        let catchWeigthQty = manufacturedQty
+        let catchWeightQty = manufacturedQty
         if (manufacturingUOM !== catchWeightUOM) {
-          catchWeigthQty = this.convertUOM(basicUOM, altUOM, manufacturedQty, manufacturingUOM, catchWeightUOM)
+          catchWeightQty = this.convertUOM(basicUOM, altUOM, manufacturedQty, manufacturingUOM, catchWeightUOM) || 0
         }
-        this.setCatchWeightQuantity(catchWeigthQty.toString())
+        catchWeightQty = Math.abs(catchWeightQty)
+        if (catchWeightQty && !isNaN(catchWeightQty)) {
+          this.setCatchWeightQuantity(catchWeightQty.toString())
+        } else {
+          this.setCatchWeightQuantity('')
+        }
       })
   }
 

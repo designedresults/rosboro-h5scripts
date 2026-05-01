@@ -499,6 +499,7 @@ interface IActiveGrid {
 	
 	updateRowDataSet(value: any, id: any, row: any)
 	getRowElement(row: number)
+	idsDataGrid: any
 
 }
 

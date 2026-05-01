@@ -1,7 +1,10 @@
 import Dialog from '../Dialog'
 import MBMInit, { IMBMInit } from '../MBMInit'
 
-class ContinuousKilns {
+/**
+ * Adds button to submit MBMInitiator for continuous kilns
+ */
+export class ContinuousKilns {
   private controller: IInstanceController
 
   private top = 7

@@ -14,7 +14,7 @@ import {
 import numeral from 'numeral';
 import Dialog from '../Dialog';
 
-type OrderLine = {
+export type OrderLine = {
   warehouse: string;
   reqDelDate: string;
   customerNumber: string;
@@ -37,7 +37,7 @@ function handleMessage(e: MessageEvent) {
   this.onMessage(e)
 }
 
-class CutFromStock {
+export class CutFromStock {
   private controller: IInstanceController
   private userId: string;
   private company: string;

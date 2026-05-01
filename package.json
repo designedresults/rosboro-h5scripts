@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"webpack --mode=development --watch\" \"serve ./ --ssl-cert=localhost.crt --ssl-key=localhost.key\"",
     "build": "webpack --mode=production --define-process-env-node-env=production",
-    "doc": "typedoc",
+    "doc": "typedoc --options ./typedoc.json",
     "test": "jest"
   },
   "devDependencies": {

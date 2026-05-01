@@ -37,7 +37,7 @@ import numeral from 'numeral'
  * 
  * 
  */
-class ReturnFromInfeed {
+export class ReturnFromInfeed {
   private controller: IInstanceController
   private user: any;
   private division: string;

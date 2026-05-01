@@ -1,8 +1,10 @@
 import dayjs from 'dayjs'
 import Dialog from '../Dialog'
 import MBMInit, { IMBMInit } from '../MBMInit'
-
-class BatchKilns {
+/**
+ * Adds button to submit MBMInitiator for batch kilns
+ */
+export class BatchKilns {
   private controller: IInstanceController
 
   private top = 7

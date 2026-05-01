@@ -1,10 +1,10 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "name": "H5 Scripts - Resers",
-  "entryPoints": ["src/**/*.ts"],
+  "name": "H5 Scripts - Rosboro",
+  "entryPoints": ["src/**/index.ts"],
   "out": "docs",
   "sort": ["source-order", "static-first"],
-  "excludeNotDocumented": true,
+  // "excludeNotDocumented": true,
   "disableSources": true,
-  "blockTags": ["@M3Program", "@M3Panel", "@M3API", "@ScriptArgs"]
+  "blockTags": ["@M3Program", "@M3Panel", "@M3API", "@ScriptArgs","@argument"]
 }

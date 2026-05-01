@@ -32,7 +32,7 @@ import Dialog from '../Dialog';
  * 
  * 
  */
-class ReprintTag {
+export class ReprintTag {
   private controller: IInstanceController
   private user: any;
   private division: string;

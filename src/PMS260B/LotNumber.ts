@@ -1,11 +1,11 @@
 import { ActionButton, formatErrorMessage, H5Dialog, M3API } from '@designedresults/h5-script-plus'
 import dayjs from 'dayjs'
 import numeral from 'numeral'
-class PMS260B_LotNumber {
+export class LotNumber {
   private controller: IInstanceController
   private log: IScriptLog
-  private product: string
-  private btn: ActionButton
+  private product?: string
+  private defaults: any
 
   constructor(scriptArgs: IScriptArgs) {
     this.controller = scriptArgs.controller
@@ -15,21 +15,7 @@ class PMS260B_LotNumber {
     }
 
     // WWWHLO,WS1,WWPRNO,KS1X2KDFKST50.5,WWSTRT,001,WWORQT,1000,WWMAUN,UN,WHWHSL,KS OUTFEED!DEBUG
-    const defaults = this.parseArgString(scriptArgs.args)
-
-    if (!this.getProduct()) {
-      this.setWarehouse(defaults.WWWHLO)
-      this.setProduct(defaults.WWPRNO)
-      this.setStructureType(defaults.WWSTRT)
-      this.setLocation(defaults.WHWHSL)
-      this.controller.PressKey('ENTER')
-    }
-    if (!this.getQuantity()) {
-      this.setQuantity(defaults.WWORQT)
-      this.setManufacturingUm(defaults.WWMAUN)
-    }
-
-    this.product = this.getProduct()
+    this.defaults = this.parseArgString(scriptArgs.args)
 
   }
 
@@ -48,10 +34,30 @@ class PMS260B_LotNumber {
   }
 
   public static Init(args: IScriptArgs): void {
-    new PMS260B_LotNumber(args).run()
+    new LotNumber(args).run()
   }
 
   private async run() {
+
+    const warehouse = this.getWarehouse()
+    if (this.defaults.WWWHLO !== warehouse) {
+      // only execute this script for the provided warehouse
+      return;
+    }
+
+    if (!this.getProduct()) {
+      this.setWarehouse(this.defaults.WWWHLO)
+      this.setProduct(this.defaults.WWPRNO)
+      this.setStructureType(this.defaults.WWSTRT)
+      this.setLocation(this.defaults.WHWHSL)
+      this.controller.PressKey('ENTER')
+    }
+    if (!this.getQuantity()) {
+      this.setQuantity(this.defaults.WWORQT)
+      this.setManufacturingUm(this.defaults.WWMAUN)
+    }
+
+    this.product = this.getProduct()
     const { lotNumberingMethod } = await this.getItem()
 
     if (lotNumberingMethod === '0') { // 0-Manual lot number
@@ -77,7 +83,7 @@ class PMS260B_LotNumber {
   }
 
   private addButton() {
-    this.btn = new ActionButton(this.controller)
+    new ActionButton(this.controller)
       .name('btn-confirm-transaction')
       .value('F14 Confirm Transaction')
       .position(7, 76)
@@ -88,6 +94,11 @@ class PMS260B_LotNumber {
       .build()
   }
 
+  private getWarehouse(): string {
+    const value = this.controller.GetValue('WWWHLO')
+    this.log.Debug(`Warehouse (WWWHLO) = ${value}`)
+    return value
+  }
 
   private setWarehouse(value: string) {
     if (value) {
@@ -183,7 +194,7 @@ class PMS260B_LotNumber {
 
   private getPlanningAreaFromProduct() {
     let planningArea = '';
-    if (this.product?.length > 2) {
+    if (this.product && this.product.length > 2) {
       planningArea = this.product.substring(0, 2)
       this.log.Debug(`Planning area ${planningArea} retrieved from product ${this.product}`)
     }
@@ -214,4 +225,4 @@ class PMS260B_LotNumber {
   }
 }
 
-module.exports = PMS260B_LotNumber
+module.exports = LotNumber

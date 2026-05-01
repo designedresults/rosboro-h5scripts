@@ -1,14 +1,27 @@
 import { ActionButton, H5Dialog, Label, M3API, NumberInput } from '@designedresults/h5-script-plus'
 import numeral from "numeral"
-
-class ATS101G_Camber {
+/**
+ * Allow entry of either Camber (in inches) or Radius (in feet)
+ * 
+ * @M3Program ATS101
+ * @M3Panel G
+ * 
+ * * Sorting option must be `12`
+ * * Supported attribute models are `BEAM_NS` and `BEAM_NS_SB`
+ * * If attribute `CAMBER` value is `ENTER VALUE`, then text in attribute `CAMBERVALUE` will be parsed
+ * * Attribute values `RADIUS_FT` and `CAMBER_IN` will be updated with the proper values
+ * * Additional input boxes area added in the heading section that allow conversion between camber (in inches) or radius (in feet).
+ * * Length used for conversions will be pulled from the MMS001 (ILEN) Length.
+ * 
+ */
+export class Camber {
   private controller: IInstanceController
   private datagrid: IActiveGrid
   private log: IScriptLog
 
-  private length: NumberInput
-  private radius: NumberInput
-  private camber: NumberInput
+  private length?: NumberInput
+  private radius?: NumberInput
+  private camber?: NumberInput
 
   constructor(scriptArgs: IScriptArgs) {
     this.controller = scriptArgs.controller
@@ -24,7 +37,7 @@ class ATS101G_Camber {
   }
 
   public static Init(args: IScriptArgs): void {
-    new ATS101G_Camber(args).run()
+    new Camber(args).run()
   }
 
   private async run() {
@@ -47,7 +60,7 @@ class ATS101G_Camber {
     new Label(this.controller).name('lbl-length').value(`Length (FT)`).position(y, x).build()
     this.length = new NumberInput(this.controller)
       .name('txt-length')
-      .value(numeral(initialValues.length).format().toString())
+      .value(numeral(initialValues?.length).format().toString())
       .width(4)
       .position(y, x + 9)
       .color('#000000')
@@ -380,4 +393,4 @@ class ATS101G_Camber {
 }
 
 
-module.exports = ATS101G_Camber
+module.exports = Camber

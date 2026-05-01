@@ -1,13 +1,12 @@
 import { BulkM3API, ComboBox, CSRF, Label, M3API, TextInput } from '@designedresults/h5-script-plus'
-class PPS200A_SearchSupplier {
+export class SearchSupplier {
   private controller: IInstanceController
   private top: number = 5
   private left: number = 36
-  private textInput: TextInput
-  private comboBox: ComboBox
+  private textInput?: TextInput
+  private comboBox?: ComboBox
   private bulkM3API: BulkM3API
 
-  private results: ComboBoxItemElement[] = []
 
   constructor(scriptArgs: IScriptArgs) {
     this.controller = scriptArgs.controller
@@ -15,7 +14,7 @@ class PPS200A_SearchSupplier {
   }
 
   public static Init(args: IScriptArgs): void {
-    new PPS200A_SearchSupplier(args).run()
+    new SearchSupplier(args).run()
   }
 
   private async run() {
@@ -40,7 +39,7 @@ class PPS200A_SearchSupplier {
   }
 
   private async search(term: string) {
-    this.textInput.showLoading()
+    this.textInput?.showLoading()
     if (!term) {
       this.comboBox?.remove()
     } else {
@@ -50,27 +49,22 @@ class PPS200A_SearchSupplier {
       ])
 
       const results: ComboBoxItemElement[] = []
-      const ids = new Set<string>()
-      for (const res of supplierSearch) {
-        if (!ids.has(res.SUNO)) {
-          ids.add(res.SUNO)
-          const item = new ComboBoxItemElement()
-          item.Value = res.SUNO
-          item.Text = `${res.SUNO} - ${res.SUNM}`
+      const data = new Map<string, string>()
+      supplierSearch.forEach(s => data.set(s.SUNO, s.SUNM))
+      extFieldSearch.forEach(s => data.set(s.SUNO, s.A121))
+
+      for (const id of Array.from(data.keys()).sort()) {
+        const name = data.get(id);
+        const item = new ComboBoxItemElement()
+          item.Value = id
+          item.Text = `${id} - ${name}`
           results.push(item)
-        }
       }
-      for (const res of extFieldSearch) {
-        if (!ids.has(res.SUNO)) {
-          ids.add(res.SUNO)
-          const item = new ComboBoxItemElement()
-          item.Value = res.SUNO
-          item.Text = `${res.SUNO} - ${res.A121}`
-          results.push(item)
-        }
-      }
+
       if (results.length > 0) {
-        results.at(0).IsSelected = true
+        if (results[0]) {
+          results[0].IsSelected = true
+        }
         this.controller.SetValue('WASUNO', results[0].Value)
       }
 
@@ -87,7 +81,7 @@ class PPS200A_SearchSupplier {
         this.controller.SetValue('WASUNO', value)
       })
     }
-    this.textInput.hideLoading()
+    this.textInput?.hideLoading()
   }
 
   private async searchSupplier(term: string): Promise<{ SUNO: string; SUNM: string }[]> {
@@ -152,14 +146,19 @@ class PPS200A_SearchSupplier {
   }
 }
 
-module.exports = PPS200A_SearchSupplier
+module.exports = SearchSupplier
 
+//@ts-ignore
 function debounce(func, delay) {
+  //@ts-ignore
   let timeoutId
 
+  //@ts-ignore
   return function (...args) {
+    //@ts-ignore
     clearTimeout(timeoutId)
     timeoutId = setTimeout(() => {
+      //@ts-ignore
       func.apply(this, args)
     }, delay)
   }

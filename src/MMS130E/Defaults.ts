@@ -1,4 +1,15 @@
-class MMS130E_Defaults {
+/**
+ * Sets default values for MMS130 Reclass
+ * 
+ * |Target field|Source field|
+ * |---|---|
+ * |New item number (WWNITN)|Item number (WWITNO)
+ * |New lot number (WWNBAN)|Lot number (WWBANO)
+ * |Lot ref 1 (WLBREF)|Lot number (WWBANO)
+ * 
+ */
+
+export class Defaults {
   private controller: IInstanceController
   private log: IScriptLog
 
@@ -13,7 +24,7 @@ class MMS130E_Defaults {
   }
 
   public static Init(args: IScriptArgs): void {
-    new MMS130E_Defaults(args).run()
+    new Defaults(args).run()
   }
 
   private async run() {
@@ -49,7 +60,7 @@ class MMS130E_Defaults {
     this.controller.SetValue('WWNITN', value)
   }
   private getNewLotNumber() {
-    const value = this.controller.GetValue('WWNNBAN')
+    const value = this.controller.GetValue('WWNBAN')
     this.log.Debug(`Item (WWNBAN) = ${value}`)
     return value
   }
@@ -66,4 +77,4 @@ class MMS130E_Defaults {
 }
 
 
-module.exports = MMS130E_Defaults
+module.exports = Defaults

@@ -1,3 +1,9 @@
+/**
+ * Sends an MBMInitiator message
+ * 
+ * @M3API MNS260MI/AddMBMInit
+ * @M3API MNS260MI/PrcMBMInit
+ */
 export default class MBMInit {
   public static async sendMBM(mbm: IMBMInit) {
     await this.addMBMInit(mbm)
@@ -50,6 +56,9 @@ export default class MBMInit {
   }
 }
 
+/**
+ * @interface
+ */
 export interface IMBMInit {
   mbmName?: string
   automaticResend?: string

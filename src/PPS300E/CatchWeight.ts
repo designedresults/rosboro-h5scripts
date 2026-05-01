@@ -1,5 +1,5 @@
 import { M3API } from '@designedresults/h5-script-plus'
-class PMS050E_CatchWeight {
+export class CatchWeight {
   private controller: IInstanceController
   private log: IScriptLog
   private itemNumber: string
@@ -14,7 +14,7 @@ class PMS050E_CatchWeight {
   }
 
   public static Init(args: IScriptArgs): void {
-    new PMS050E_CatchWeight(args).run()
+    new CatchWeight(args).run()
   }
 
   private async run() {
@@ -104,10 +104,10 @@ class PMS050E_CatchWeight {
     const to = altUOM[toUOM].factor
     let converted = 0
     if (fromUOM === basicUOM) {
-      converted = quantity * to
+      converted = quantity / to
     } else {
-      const qtyBasicUOM = quantity / from
-      converted = qtyBasicUOM * to
+      const qtyBasicUOM = quantity * from
+      converted = qtyBasicUOM / to
     }
     if (converted !== undefined) {
       const roundingFactor = Math.pow(10, altUOM[toUOM].decimals ?? 0)
@@ -117,7 +117,7 @@ class PMS050E_CatchWeight {
 
 }
 
-module.exports = PMS050E_CatchWeight
+module.exports = CatchWeight
 
 type AltUOM = {
   [key: string]: { factor: number; decimals: number }

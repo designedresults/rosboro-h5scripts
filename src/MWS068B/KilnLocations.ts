@@ -1,4 +1,7 @@
-class MWS068B_KilnLocations {
+/**
+ * Adds buttons to set location filters and refresh
+ */
+export class KilnLocations {
   private controller: IInstanceController
 
   private top: number = 1
@@ -9,7 +12,7 @@ class MWS068B_KilnLocations {
   }
 
   public static Init(args: IScriptArgs): void {
-    new MWS068B_KilnLocations(args).run()
+    new KilnLocations(args).run()
   }
 
   private async run() {
@@ -112,4 +115,4 @@ class MWS068B_KilnLocations {
 
 }
 
-module.exports = MWS068B_KilnLocations
+module.exports = KilnLocations

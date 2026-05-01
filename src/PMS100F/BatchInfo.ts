@@ -8,7 +8,7 @@ import {
   TextArea,
   TextInput,
 } from '@designedresults/h5-script-plus'
-class PMS100F_BatchInfo {
+export class BatchInfo {
   private controller: IInstanceController
   private log: IScriptLog
   private warehouse: string
@@ -32,7 +32,7 @@ class PMS100F_BatchInfo {
   }
 
   public static Init(args: IScriptArgs): void {
-    new PMS100F_BatchInfo(args).run()
+    new BatchInfo(args).run()
   }
 
   private async run() {
@@ -267,4 +267,4 @@ class PMS100F_BatchInfo {
   }
 }
 
-module.exports = PMS100F_BatchInfo
+module.exports = BatchInfo

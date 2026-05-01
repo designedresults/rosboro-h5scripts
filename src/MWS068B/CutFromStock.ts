@@ -3,8 +3,10 @@ import {
 } from '@designedresults/h5-script-plus'
 
 
-
-class CutFromStock {
+/**
+ * Allows selection of a lot number (Opt 1) to be returned to cut from stock script on OIS302
+ */
+export class CutFromStock {
   private controller: IInstanceController
   public static Init(args: IScriptArgs): void {
     new CutFromStock(args).run()

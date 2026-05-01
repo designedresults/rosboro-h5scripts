@@ -1,7 +1,5 @@
-import { formatErrorMessage, H5Dialog, M3API } from '@designedresults/h5-script-plus'
-import dayjs from 'dayjs'
-import numeral from 'numeral'
-class PMS050E_CatchWeight {
+import { M3API } from '@designedresults/h5-script-plus'
+export class CatchWeight {
   private controller: IInstanceController
   private log: IScriptLog
   private facility: string
@@ -20,7 +18,7 @@ class PMS050E_CatchWeight {
   }
 
   public static Init(args: IScriptArgs): void {
-    new PMS050E_CatchWeight(args).run()
+    new CatchWeight(args).run()
   }
 
   private async run() {
@@ -147,7 +145,7 @@ class PMS050E_CatchWeight {
   }
 }
 
-module.exports = PMS050E_CatchWeight
+module.exports = CatchWeight
 
 type AltUOM = {
   [key: string]: { factor: number; decimals: number }

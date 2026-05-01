@@ -1,5 +1,9 @@
 import { M3API } from '@designedresults/h5-script-plus'
-class MMS310E_CatchWeight {
+
+/**
+ * Converts basic uom qty to catchweight qty
+ */
+export class MMS310E_CatchWeight {
   private controller: IInstanceController
   private log: IScriptLog
   private product: string
@@ -32,7 +36,7 @@ class MMS310E_CatchWeight {
         const physicalInventoryQty = Number(e.target.value)
         let catchWeigthQty = physicalInventoryQty
         if (basicUOM !== catchWeightUOM) {
-          catchWeigthQty = this.convertUOM(basicUOM, altUOM, physicalInventoryQty, basicUOM, catchWeightUOM)
+          catchWeigthQty = this.convertUOM(basicUOM, altUOM, physicalInventoryQty, basicUOM, catchWeightUOM) ?? 0
         }
         this.setCatchWeightQuantity(catchWeigthQty.toString())
       })
@@ -100,10 +104,10 @@ class MMS310E_CatchWeight {
     const to = altUOM[toUOM].factor
     let converted = 0
     if (fromUOM === basicUOM) {
-      converted = quantity * to
+      converted = quantity / to
     } else {
-      const qtyBasicUOM = quantity / from
-      converted = qtyBasicUOM * to
+      const qtyBasicUOM = quantity * from
+      converted = qtyBasicUOM / to
     }
     if (converted !== undefined) {
       const roundingFactor = Math.pow(10, altUOM[toUOM].decimals ?? 0)

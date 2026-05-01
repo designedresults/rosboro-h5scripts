@@ -37,7 +37,7 @@ import Dialog from '../Dialog';
  * 
  * 
  */
-class QuickAdjust {
+export class QuickAdjust {
   private controller: IInstanceController
   private user: any;
 

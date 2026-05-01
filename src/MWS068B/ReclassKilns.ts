@@ -1,9 +1,8 @@
+import { ActionButton, BulkM3API, CSRF, H5Dialog, M3API } from '@designedresults/h5-script-plus'
 import dayjs from 'dayjs'
 import Dialog from '../Dialog'
-import MBMInit, { IMBMInit } from '../MBMInit'
-import { ActionButton, BulkM3API, CSRF, H5Dialog, IMIBulkRequest, M3API } from '@designedresults/h5-script-plus'
 
-class BatchKilns {
+class ReclassKilns {
   private controller: IInstanceController
 
   private top = 7
@@ -26,7 +25,7 @@ class BatchKilns {
   }
 
   public static Init(args: IScriptArgs): void {
-    new BatchKilns(args).run()
+    new ReclassKilns(args).run()
   }
 
   private async run() {
@@ -143,7 +142,7 @@ class BatchKilns {
         A530: time
       }
     }))
-    
+
     const resp = await this.bulkM3API.executeRequest(requests)
     if (resp.nrOfFailedTransactions) {
       console.error(resp)
@@ -155,4 +154,4 @@ class BatchKilns {
 
 }
 
-module.exports = BatchKilns
+module.exports = ReclassKilns
